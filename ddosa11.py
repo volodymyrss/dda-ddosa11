@@ -30,9 +30,9 @@ class ibis_isgr_energy(DataAnalysis):
         ht['randSeed']=500
         ht['riseDOL']="auto"
         #ht['riseDOL']=self.input_ecorrdata.risedol
-        ht['GODOL']=self.input_ecorrdata.godol
-        ht['mcecDOL']=self.input_ecorrdata.mcecdol
-        ht['l2reDOL']=self.input_ecorrdata.l2redol
+        ht['GODOL']="auto"#self.input_ecorrdata.godol
+        ht['mcecDOL']="auto"#self.input_ecorrdata.mcecdol
+        ht['l2reDOL']="auto"#self.input_ecorrdata.l2redol
         ht['chatter']="10"
         ht.run()
 
@@ -193,7 +193,8 @@ class BinEventsVirtual(DataAnalysis):
         ht['idxNoisy']=self.input_scw.revdirpath+"/idx/isgri_prp_noise_index.fits[1]"
         ht['outRawShadow']=det_fn+det_tpl
         ht['outEffShadow']=eff_fn+eff_tpl
-        ht['inEFFC']=self.input_ibisic.ibisicroot+"/mod/isgr_effc_mod_0001.fits"
+        ht['inEFFC']="auto"
+        #ht['inEFFC']=self.input_ibisic.ibisicroot+"/mod/isgr_effc_mod_0001.fits"
 
         self.extra_pars(ht)
 
