@@ -4,6 +4,8 @@ import ast
 class FindGetEcorrCalDB(DataAnalysis):
     version="osa11"
 
+    run_for_hashe=True
+
     input_rev=RevForScW
     input_ibisic=IBIS_ICRoot
 
@@ -266,7 +268,7 @@ class SpectraBins(DataAnalysis):
 
     version="v1"
     def main(self):
-        self.binrmf=os.environ['CURRENT_IC']+"/ic/ibis/mod/isgr_ebds_mod_0001.fits"
+        self.binrmf=os.environ['CURRENT_IC']+"/ic/ibis/rsp/isgr_ebds_mod_0001.fits"
         e=pyfits.open(self.binrmf)[1].data
         self.bins=zip(e['E_MIN'],e['E_MAX'])
         self.binrmfext=self.binrmf+'[1]'
