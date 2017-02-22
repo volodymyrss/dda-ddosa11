@@ -40,6 +40,7 @@ class FindGetEcorrCalDB(DataAnalysis):
             risedol=self.input_ibisic.ibisicroot+"/mod/isgr_rise_mod_"+revid+".fits"
             mcecdol=self.input_ibisic.ibisicroot+"/mod/isgr_mcec_mod_"+revid+".fits"
             l2redol=self.input_ibisic.ibisicroot+"/mod/isgr_l2re_mod_"+revid+".fits"
+            effcdol=self.input_ibisic.ibisicroot+"/mod/isgr_effc_mod_"+revid+".fits"
 
             def main(self):
                 pass
