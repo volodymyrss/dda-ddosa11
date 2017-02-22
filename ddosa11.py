@@ -38,6 +38,7 @@ class FindGetEcorrCalDB(DataAnalysis):
             risedol=self.input_ibisic.ibisicroot+"/mod/isgr_rise_mod_"+revid+".fits"
             mcecdol=self.input_ibisic.ibisicroot+"/mod/isgr_mcec_mod_"+revid+".fits"
             l2redol=self.input_ibisic.ibisicroot+"/mod/isgr_l2re_mod_"+revid+".fits"
+            effcdol=self.input_ibisic.ibisicroot+"/mod/isgr_effc_mod_"+revid+".fits"
 
             def main(self):
                 pass
@@ -266,7 +267,7 @@ class SpectraBins(DataAnalysis):
 
     version="v1"
     def main(self):
-        self.binrmf=os.environ['CURRENT_IC']+"/ic/ibis/mod/isgr_ebds_mod_0001.fits"
+        self.binrmf=os.environ['CURRENT_IC']+"/ic/ibis/rsp/isgr_ebds_mod_0001.fits"
         e=pyfits.open(self.binrmf)[1].data
         self.bins=zip(e['E_MIN'],e['E_MAX'])
         self.binrmfext=self.binrmf+'[1]'
