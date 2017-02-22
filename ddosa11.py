@@ -1,10 +1,61 @@
 from ddosa import *
+import ast
+
+class FindGetEcorrCalDB(DataAnalysis):
+    version="osa11"
+
+    input_rev=RevForScW
+    input_ibisic=IBIS_ICRoot
+
+    def main(self):
+        revid=self.input_rev.input_revid.str()
+                
+        gn=lambda x,y:(self.input_ibisic.ibisicroot+"/"+x+"/.version."+y)
+        
+        getversion=lambda x,y:ast.literal_eval(open(gn(x,y)).read()) if os.path.exists(gn(x,y)) else None
+
+        print "VERSION:",getversion("mod","isgr_mcec_mod_"+revid+".fits"),gn("mod","isgr_mcec_mod_"+revid+".fits")
+
+        complete_version=(  'list',
+                    getversion("cal","ibis_isgr_gain_offset_0010.fits"),
+                    getversion("mod","isgr_rise_mod_"+revid+".fits"),
+                    getversion("mod","isgr_mcec_mod_"+revid+".fits"),
+                    getversion("mod","isgr_l2re_mod_"+revid+".fits"),
+                     )
+
+        class ICConfig(DataAnalysis):
+            pass
+
+        class GetEcorrCalDB(DataAnalysis):
+            version="osa11"
+
+            input_ic=ICConfig
+            use_hashe=[complete_version]
+
+            #ignore_input=["input"]
+
+            godol=self.input_ibisic.ibisicroot+"/cal/ibis_isgr_gain_offset_0010.fits"
+            risedol=self.input_ibisic.ibisicroot+"/mod/isgr_rise_mod_"+revid+".fits"
+            mcecdol=self.input_ibisic.ibisicroot+"/mod/isgr_mcec_mod_"+revid+".fits"
+            l2redol=self.input_ibisic.ibisicroot+"/mod/isgr_l2re_mod_"+revid+".fits"
+
+            def main(self):
+                pass
+
+        return GetEcorrCalDB
+
+
+class T(DataAnalysis):
+    cached=True
+
+    input_ecorrdata=FindGetEcorrCalDB
+
 
 class ibis_isgr_energy(DataAnalysis):
     cached=False
 
     input_scw=ScWData
-    input_ecorrdata=GetEcorrCalDB
+    input_ecorrdata=FindGetEcorrCalDB
 
     version="v6_extras"
 
@@ -28,11 +79,10 @@ class ibis_isgr_energy(DataAnalysis):
         ht['useGTI']="y"
         #ht['eraseALL']="y"
         ht['randSeed']=500
-        ht['riseDOL']="auto"
-        #ht['riseDOL']=self.input_ecorrdata.risedol
-        ht['GODOL']="auto"#self.input_ecorrdata.godol
-        ht['mcecDOL']="auto"#self.input_ecorrdata.mcecdol
-        ht['l2reDOL']="auto"#self.input_ecorrdata.l2redol
+        ht['riseDOL']=self.input_ecorrdata.risedol
+        ht['GODOL']=self.input_ecorrdata.godol
+        ht['mcecDOL']=self.input_ecorrdata.mcecdol
+        ht['l2reDOL']=self.input_ecorrdata.l2redol
         ht['chatter']="10"
         ht.run()
 
@@ -43,7 +93,7 @@ class ibis_comp_energy(DataAnalysis):
     cached=False
 
     input_scw=ScWData
-    input_ecorrdata=GetEcorrCalDB
+    input_ecorrdata=FindGetEcorrCalDB
 
     version="v6_extras"
 
@@ -70,7 +120,7 @@ class ibis_comp_energy(DataAnalysis):
         #ht['eraseALL']="y"
         ht['randSeed']=500
        # ht['riseDOL']="auto"
-        ht['riseDOL']="auto"
+        ht['riseDOL']=self.input_ecorrdata.risedol
         ht['GODOL']=self.input_ecorrdata.godol
         ht['mcecDOL']=self.input_ecorrdata.mcecdol
         ht['l2reDOL']=self.input_ecorrdata.l2redol
@@ -83,23 +133,6 @@ class ibis_comp_energy(DataAnalysis):
 
 #/sps/integral/data/ic/ic_snapshot_20140321/ic/ibis/mod/isgr_effc_mod_0001.fits
 
-class GetEcorrCalDB(DataAnalysis):
-    input=["ecorr_standard_OSA10.2"]
-    input_lut2=GetLUT2
-    input_ibisic=IBIS_ICRoot
-    input_scw=ScWData
-
-    cached=False
-
-    #ignore_input=["input"]
-
-
-    def main(self):
-        self.godol=self.input_ibisic.ibisicroot+"/cal/ibis_isgr_gain_offset_0010.fits"
-        self.risedol=self.input_ibisic.ibisicroot+"/mod/isgr_rise_mod_0239.fits"
-        self.mcecdol=self.input_ibisic.ibisicroot+"/mod/isgr_mcec_mod_0001.fits"
-        self.l2redol=self.input_ibisic.ibisicroot+"/mod/isgr_l2re_mod_0001.fits"
-
 
 class BinEventsVirtual(DataAnalysis):
     input_scw=ScWData
@@ -109,6 +142,8 @@ class BinEventsVirtual(DataAnalysis):
     input_events=ISGRIEvents
     input_gti=ibis_gti
     input_dead=ibis_dead
+    
+    input_ecorrdata=FindGetEcorrCalDB
 
     target_level=None
     input_bins=None
@@ -193,7 +228,7 @@ class BinEventsVirtual(DataAnalysis):
         ht['idxNoisy']=self.input_scw.revdirpath+"/idx/isgri_prp_noise_index.fits[1]"
         ht['outRawShadow']=det_fn+det_tpl
         ht['outEffShadow']=eff_fn+eff_tpl
-        ht['inEFFC']="auto"
+        ht['inEFFC']=self.input_ecorrdata.effcdol
         #ht['inEFFC']=self.input_ibisic.ibisicroot+"/mod/isgr_effc_mod_0001.fits"
 
         self.extra_pars(ht)
