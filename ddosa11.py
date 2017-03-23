@@ -9,7 +9,32 @@ class FindGetEcorrCalDB(DataAnalysis):
     input_rev=RevForScW
     input_ibisic=IBIS_ICRoot
 
+    onlyauto=True
+
     def main(self):
+        class ICConfig(DataAnalysis):
+            pass
+
+        if self.onlyauto:
+            class GetEcorrCalDB(DataAnalysis):
+                version="osa11"
+
+                input_ic=ICConfig
+                #use_hashe=[complete_version]
+
+                #ignore_input=["input"]
+
+                godol="auto"
+                risedol="auto"
+                mcecdol="auto"
+                l2redol="auto"
+                effcdol="auto"
+
+                def main(self):
+                    pass
+            return GetEcorrCalDB
+
+
         revid=self.input_rev.input_revid.str()
                 
         gn=lambda x,y:(self.input_ibisic.ibisicroot+"/"+x+"/.version."+y)
@@ -25,8 +50,6 @@ class FindGetEcorrCalDB(DataAnalysis):
                     getversion("mod","isgr_l2re_mod_"+revid+".fits"),
                      )
 
-        class ICConfig(DataAnalysis):
-            pass
 
         class GetEcorrCalDB(DataAnalysis):
             version="osa11"
