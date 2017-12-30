@@ -1,5 +1,9 @@
 from ddosa import *
+import dataanalysis.core as da
 import ast
+import os
+import astropy.io.fits as fits
+import numpy as np
 
 class FindGetEcorrCalDB(DataAnalysis):
     version="osa11"
@@ -16,11 +20,59 @@ class FindGetEcorrCalDB(DataAnalysis):
             pass
 
         if self.onlyauto:
+
+            class ICIndexEntry(DataAnalysis):
+                ds="UNDEFINED"
+                hashe=None
+
+                def get_version(self):
+                    v = self.get_signature() + "." + self.version +"." + self.ds + "." + da.hashtools.shhash(self.hashe)[:8]
+                    return v
+
+            class FindICIndexEntry(DataAnalysis):
+                ds=None
+                icversion=1
+                input_scw=ScWData
+
+
+
+                def main(self):
+                    t1,t2=self.input_scw.get_t1_t2()
+
+                    idxfn=os.environ.get("CURRENT_IC")+"/idx/ic/"+self.ds+"-IDX.fits"
+                    print("idx:",idxfn)
+
+                    idx=fits.open(idxfn)[1].data
+
+                    m_on=(idx['VSTART']<t1) & (idx['VSTOP']>t2) & (idx['VERSION']==self.icversion)
+                    print("found valid:",sum(m_on))
+                    print(idx[m_on])
+                    order=np.argsort(idx[m_on]['VSTART'])
+                    member_location_rel=idx[m_on]['MEMBER_LOCATION'][order[-1]]
+                    print("newest",member_location_rel)
+
+                    member_location=os.path.abspath(os.path.dirname(idxfn) + "/" + member_location_rel)
+
+                    assert os.path.exists(member_location)
+
+                    version_fn =os.path.dirname(member_location)+"/.version."+os.path.basename(member_location)
+
+                    print("version file",version_fn)
+
+                    if os.path.exists(version_fn):
+                        print("found hashe file at",version_fn)
+                        ic_hashe=ast.literal_eval(open(version_fn).read())
+
+                        return ICIndexEntry(use_hashe=ic_hashe,use_ds=self.ds)
+                       # return DataAnalysis.from_hashe(ic_hashe).get()
+
             class GetEcorrCalDB(DataAnalysis):
                 version="osa11"
 
                 input_ic=ICConfig
                 #use_hashe=[complete_version]
+
+                input_isgri_rise_mod=FindICIndexEntry(use_ds="ISGR-RISE-MOD",use_icversion=2)
 
                 #ignore_input=["input"]
 
