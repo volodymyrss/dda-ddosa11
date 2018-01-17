@@ -27,6 +27,18 @@ class FindGetEcorrCalDB(DataAnalysis):
 
                 def get_version(self):
                     v = self.get_signature() + "." + self.version +"." + self.ds + "." + da.hashtools.shhash(self.hashe)[:8]
+
+                    note=dict(
+                        origin_object=self.__class__.__name__,
+                        origin_module=__name__,
+                        generalized_hash=self.hashe,
+                        reduced_hash=v,
+                        handle=v,
+                    )
+
+                    if note not in self.factory.factorizations:
+                        self.factory.note_factorization(note)
+
                     return v
 
             class FindICIndexEntry(DataAnalysis):
@@ -34,7 +46,7 @@ class FindGetEcorrCalDB(DataAnalysis):
                 icversion=1
                 input_scw=ScWData
 
-
+                run_for_hashe=True
 
                 def main(self):
                     t1,t2=self.input_scw.get_t1_t2()
@@ -72,7 +84,8 @@ class FindGetEcorrCalDB(DataAnalysis):
                 input_ic=ICConfig
                 #use_hashe=[complete_version]
 
-                input_isgri_rise_mod=FindICIndexEntry(use_ds="ISGR-RISE-MOD",use_icversion=2)
+                input_isgri_rise_mod = FindICIndexEntry(use_ds="ISGR-RISE-MOD",use_icversion=2)
+                input_isgri_effc_mod = FindICIndexEntry(use_ds="ISGR-EFFC-MOD", use_icversion=1)
 
                 #ignore_input=["input"]
 
@@ -237,6 +250,7 @@ class BinEventsVirtual(DataAnalysis):
 
     ii_shadow_build_binary="ii_shadow_build"
 
+    input_osatools = get_OSA_tools(['ii_shadow_build'])
 
     def get_version(self):
         v=self.get_signature()+"."+self.version
