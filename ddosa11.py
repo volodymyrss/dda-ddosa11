@@ -5,8 +5,16 @@ import os
 import astropy.io.fits as fits
 import numpy as np
 
+class EcorCalMode(DataAnalysis):
+    mode="fullauto"
+    #mode="commonlt"
+    #mode="commonltnoeffi"
+
 class FindGetEcorrCalDB(DataAnalysis):
     version="osa11"
+
+    ds_list=[]
+    #("ISGR-RISE-MOD",2),("ISGR-EFFC-MOD",1)
 
     run_for_hashe=True
 
@@ -75,7 +83,7 @@ class FindGetEcorrCalDB(DataAnalysis):
                         print("found hashe file at",version_fn)
                         ic_hashe=ast.literal_eval(open(version_fn).read())
 
-                        return ICIndexEntry(use_hashe=ic_hashe,use_ds=self.ds)
+                        return ICIndexEntry(use_hashe=ic_hashe,use_ds=self.ds,use_member_location=member_location)
                        # return DataAnalysis.from_hashe(ic_hashe).get()
 
             class GetEcorrCalDB(DataAnalysis):
@@ -83,9 +91,6 @@ class FindGetEcorrCalDB(DataAnalysis):
 
                 input_ic=ICConfig
                 #use_hashe=[complete_version]
-
-                input_isgri_rise_mod = FindICIndexEntry(use_ds="ISGR-RISE-MOD",use_icversion=2)
-                input_isgri_effc_mod = FindICIndexEntry(use_ds="ISGR-EFFC-MOD", use_icversion=1)
 
                 #ignore_input=["input"]
 
@@ -96,7 +101,24 @@ class FindGetEcorrCalDB(DataAnalysis):
                 effcdol="auto"
 
                 def main(self):
-                    pass
+                    print("attempt to fullfill ecorr caldb")
+                    for ds,attr in {
+                       'ISGR-RISE-MOD':'risedol',
+                       'ISGR-MCEC-MOD':'mcecdol',
+                       'ISGR-EFFC-MOD':'effcdol',
+                       'ISGR-L2RE-MOD':'l2redol',
+                    }.items():
+                        loc='input_'+ds.lower().replace("-","_")
+                        print("searching...",self,attr,loc)
+                        if hasattr(self,loc):
+                            print("setting",self,attr,loc,getattr(self,loc).member_location)
+                            setattr(self,attr,getattr(self,loc).member_location)
+
+
+            for ds,ds_version in self.ds_list:
+                print("pre-setting",self,ds,'input_'+ds.lower().replace("-","_"))
+                setattr(GetEcorrCalDB,'input_'+ds.lower().replace("-","_"),FindICIndexEntry(use_ds=ds,use_icversion=ds_version))
+
             return GetEcorrCalDB
 
 
@@ -117,7 +139,7 @@ class FindGetEcorrCalDB(DataAnalysis):
 
 
         class GetEcorrCalDB(DataAnalysis):
-            version="osa11"
+            version="osa11direct"
 
             input_ic=ICConfig
             use_hashe=[complete_version]
@@ -139,14 +161,14 @@ class FindGetEcorrCalDB(DataAnalysis):
 class T(DataAnalysis):
     cached=True
 
-    input_ecorrdata=FindGetEcorrCalDB
+    input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-RISE-MOD",2),("ISGR-EFFC-MOD",1)])
 
 
 class ibis_isgr_energy(DataAnalysis):
     cached=False
 
     input_scw=ScWData
-    input_ecorrdata=FindGetEcorrCalDB
+    input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-RISE-MOD",2),("ISGR-EFFC-MOD",1),("ISGR-MCEC-MOD",1),("ISGR-L2RE-MOD",1)])
 
     version="v6_extras"
 
@@ -184,7 +206,7 @@ class ibis_comp_energy(DataAnalysis):
     cached=False
 
     input_scw=ScWData
-    input_ecorrdata=FindGetEcorrCalDB
+    input_ecorrdata=input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-RISE-MOD",2)])
 
     version="v6_extras"
 
@@ -234,7 +256,7 @@ class BinEventsVirtual(DataAnalysis):
     input_gti=ibis_gti
     input_dead=ibis_dead
     
-    input_ecorrdata=FindGetEcorrCalDB
+    input_ecorrdata=input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-EFFC-MOD",1)])
 
     target_level=None
     input_bins=None
