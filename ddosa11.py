@@ -14,162 +14,10 @@ class EcorCalMode(DataAnalysis):
     #mode="commonlt"
     #mode="commonltnoeffi"
 
-class FindGetEcorrCalDB(DataAnalysis):
-    version="osa11"
-
-    ds_list=[]
-    #("ISGR-RISE-MOD",2),("ISGR-EFFC-MOD",1)
-
-    run_for_hashe=True
-
-    input_rev=RevForScW
-    input_ibisic=IBIS_ICRoot
-
-    onlyauto=True
-
-    def main(self):
-        class ICConfig(DataAnalysis):
-            pass
-
-        if self.onlyauto:
-
-            class ICIndexEntry(DataAnalysis):
-                ds="UNDEFINED"
-                hashe=None
-
-                def get_version(self):
-                    v = self.get_signature() + "." + self.version +"." + self.ds + "." + da.hashtools.shhash(self.hashe)[:8]
-
-                    note=dict(
-                        origin_object=self.__class__.__name__,
-                        origin_module=__name__,
-                        generalized_hash=self.hashe,
-                        reduced_hash=v,
-                        handle=v,
-                    )
-
-                    if note not in self.factory.factorizations:
-                        self.factory.note_factorization(note)
-
-                    return v
-
-            class FindICIndexEntry(DataAnalysis):
-                ds=None
-                icversion=1
-                input_scw=ScWData
-
-                run_for_hashe=True
-
-                def main(self):
-                    t1,t2=self.input_scw.get_t1_t2()
-
-                    idxfn=os.environ.get("CURRENT_IC")+"/idx/ic/"+self.ds+"-IDX.fits"
-                    print("idx:",idxfn)
-
-                    idx=fits.open(idxfn)[1].data
-
-                    m_on=(idx['VSTART']<t1) & (idx['VSTOP']>t2) & (idx['VERSION']==self.icversion)
-                    print("found valid:",sum(m_on))
-                    print(idx[m_on])
-                    order=np.argsort(idx[m_on]['VSTART'])
-                    member_location_rel=idx[m_on]['MEMBER_LOCATION'][order[-1]]
-                    print("newest",member_location_rel)
-
-                    member_location=os.path.abspath(os.path.dirname(idxfn) + "/" + member_location_rel)
-
-                    assert os.path.exists(member_location)
-
-                    version_fn =os.path.dirname(member_location)+"/.version."+os.path.basename(member_location)
-
-                    print("version file",version_fn)
-
-                    if os.path.exists(version_fn):
-                        print("found hashe file at",version_fn)
-                        ic_hashe=ast.literal_eval(open(version_fn).read())
-
-                        return ICIndexEntry(use_hashe=ic_hashe,use_ds=self.ds,use_member_location=member_location)
-                       # return DataAnalysis.from_hashe(ic_hashe).get()
-
-            class GetEcorrCalDB(DataAnalysis):
-                version="osa11"
-
-                input_ic=ICConfig
-                #use_hashe=[complete_version]
-
-                #ignore_input=["input"]
-
-                godol="auto"
-                risedol="auto"
-                mcecdol="auto"
-                l2redol="auto"
-                effcdol="auto"
-
-                infactory=False
-                virtual=False
-
-                def main(self):
-                    print("attempt to fullfill ecorr caldb")
-                    for ds,attr in {
-                       'ISGR-RISE-MOD':'risedol',
-                       'ISGR-MCEC-MOD':'mcecdol',
-                       'ISGR-EFFC-MOD':'effcdol',
-                       'ISGR-L2RE-MOD':'l2redol',
-                    }.items():
-                        loc='input_'+ds.lower().replace("-","_")
-                        print("searching...",self,attr,loc)
-                        if hasattr(self,loc):
-                            print("setting",self,attr,loc,getattr(self,loc).member_location)
-                            setattr(self,attr,getattr(self,loc).member_location)
-
-
-            for ds,ds_version in self.ds_list:
-                print("pre-setting",self,ds,'input_'+ds.lower().replace("-","_"))
-                setattr(GetEcorrCalDB,'input_'+ds.lower().replace("-","_"),FindICIndexEntry(use_ds=ds,use_icversion=ds_version))
-
-
-            return GetEcorrCalDB
-
-
-        revid=self.input_rev.input_revid.str()
-                
-        gn=lambda x,y:(self.input_ibisic.ibisicroot+"/"+x+"/.version."+y)
-        
-        getversion=lambda x,y:ast.literal_eval(open(gn(x,y)).read()) if os.path.exists(gn(x,y)) else None
-
-        print "VERSION:",getversion("mod","isgr_mcec_mod_"+revid+".fits"),gn("mod","isgr_mcec_mod_"+revid+".fits")
-
-        complete_version=(  'list',
-                    getversion("cal","ibis_isgr_gain_offset_0010.fits"),
-                    getversion("mod","isgr_rise_mod_"+revid+".fits"),
-                    getversion("mod","isgr_mcec_mod_"+revid+".fits"),
-                    getversion("mod","isgr_l2re_mod_"+revid+".fits"),
-                     )
-
-
-        class GetEcorrCalDB(DataAnalysis):
-            version="osa11direct"
-
-            input_ic=ICConfig
-            use_hashe=[complete_version]
-
-            #ignore_input=["input"]
-
-            godol=self.input_ibisic.ibisicroot+"/cal/ibis_isgr_gain_offset_0010.fits"
-            risedol=self.input_ibisic.ibisicroot+"/mod/isgr_rise_mod_"+revid+".fits"
-            mcecdol=self.input_ibisic.ibisicroot+"/mod/isgr_mcec_mod_"+revid+".fits"
-            l2redol=self.input_ibisic.ibisicroot+"/mod/isgr_l2re_mod_"+revid+".fits"
-            effcdol=self.input_ibisic.ibisicroot+"/mod/isgr_effc_mod_"+revid+".fits"
-
-            def main(self):
-                pass
-
-        return GetEcorrCalDB
-
-
 class T(DataAnalysis):
     cached=True
 
-    input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-RISE-MOD",2),("ISGR-EFFC-MOD",1)])
+    #input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-RISE-MOD",2),("ISGR-EFFC-MOD",1)])
 
 
 class ibis_isgr_energy(DataAnalysis):
@@ -220,7 +68,7 @@ class ibis_comp_energy(DataAnalysis):
     cached=False
 
     input_scw=ScWData
-    input_ecorrdata=input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-RISE-MOD",2)])
+    #input_ecorrdata=input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-RISE-MOD",2)])
 
     version="v6_extras"
 
