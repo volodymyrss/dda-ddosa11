@@ -19,6 +19,21 @@ class T(DataAnalysis):
 
     #input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-RISE-MOD",2),("ISGR-EFFC-MOD",1)])
 
+class FindICIndexEntry_RISE_MOD(FindICIndexEntry):
+    ds="ISGR-RISE-MOD"
+    icversion=2
+
+class FindICIndexEntry_EFFC_MOD(FindICIndexEntry):
+    ds="ISGR-EFFC-MOD"
+    icversion=1
+
+class FindICIndexEntry_MCEC_MOD(FindICIndexEntry):
+    ds="ISGR-MCEC-MOD"
+    icversion=1
+
+class FindICIndexEntry_L2RE_MOD(FindICIndexEntry):
+    ds="ISGR-L2RE-MOD"
+    icversion=1
 
 class ibis_isgr_energy(DataAnalysis):
     cached=False
@@ -27,10 +42,10 @@ class ibis_isgr_energy(DataAnalysis):
 
     input_ibisic=IBIS_ICRoot
 
-    input_risemod=FindICIndexEntry(use_ds="ISGR-RISE-MOD",use_icversion=2)
-    input_effcmod=FindICIndexEntry(use_ds="ISGR-EFFC-MOD",use_icversion=1)
-    input_mcecmod=FindICIndexEntry(use_ds="ISGR-MCEC-MOD",use_icversion=1)
-    input_l2remod=FindICIndexEntry(use_ds="ISGR-L2RE-MOD",use_icversion=1)
+    input_risemod=FindICIndexEntry_RISE_MOD
+    input_effcmod=FindICIndexEntry_EFFC_MOD
+    input_mcecmod=FindICIndexEntry_MCEC_MOD
+    input_l2remod=FindICIndexEntry_L2RE_MOD
 
     version="v6_extras"
 
@@ -119,7 +134,7 @@ class BinEventsVirtual(DataAnalysis):
     input_dead=ibis_dead
     
     #input_ecorrdata=input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-EFFC-MOD",1)])
-    input_effcmod=FindICIndexEntry(use_ds="ISGR-EFFC-MOD",use_icversion=1)
+    input_effcmod=FindICIndexEntry_EFFC_MOD
 
     target_level=None
     input_bins=None
