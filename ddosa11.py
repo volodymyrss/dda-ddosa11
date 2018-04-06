@@ -69,10 +69,10 @@ class ibis_isgr_energy(DataAnalysis):
         ht['useGTI']="y"
         #ht['eraseALL']="y"
         ht['randSeed']=500
-        ht['riseDOL']=self.input_risemod.member_location
+        ht['riseDOL']=self.input_risemod.get_member_location(self.input_scw)
         ht['GODOL']=self.input_ibisic.ibisicroot+"/cal/ibis_isgr_gain_offset_0010.fits"
-        ht['mcecDOL']=self.input_mcecmod.member_location
-        ht['l2reDOL']=self.input_l2remod.member_location
+        ht['mcecDOL']=self.input_mcecmod.get_member_location(self.input_scw)
+        ht['l2reDOL']=self.input_l2remod.get_member_location(self.input_scw)
         ht['chatter']="10"
         ht.run()
 
@@ -220,7 +220,7 @@ class BinEventsVirtual(DataAnalysis):
         ht['idxNoisy']=self.input_scw.revdirpath+"/idx/isgri_prp_noise_index.fits[1]"
         ht['outRawShadow']=det_fn+det_tpl
         ht['outEffShadow']=eff_fn+eff_tpl
-        ht['inEFFC']=self.input_effcmod.member_location
+        ht['inEFFC']=self.input_effcmod.get_member_location(self.input_scw)
         #ht['inEFFC']=self.input_ibisic.ibisicroot+"/mod/isgr_effc_mod_0001.fits"
 
         self.extra_pars(ht)
