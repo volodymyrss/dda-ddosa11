@@ -50,6 +50,8 @@ class ibis_isgr_energy(DataAnalysis):
     version="v6_extras"
 
     def main(self):
+        if glob.glob(self.input_scw.scwpath+"/isgri_events.fits*")==[]:
+            raise NoISGRIEvents()
 
         remove_withtemplate("isgri_events_corrected.fits(ISGR-EVTS-COR.tpl)")
 
