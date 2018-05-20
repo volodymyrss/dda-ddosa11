@@ -56,7 +56,7 @@ class ibis_isgr_energy(DataAnalysis):
         remove_withtemplate("isgri_events_corrected.fits(ISGR-EVTS-COR.tpl)")
 
         construct_gnrl_scwg_grp(self.input_scw,[\
-            self.input_scw.scwpath+"/isgri_events.fits[3]", \
+            self.input_scw.scwpath+"/isgri_events.fits[ISGR-EVTS-ALL]", \
             self.input_scw.scwpath+"/ibis_hk.fits[IBIS-DPE.-CNV]", \
             self.input_scw.auxadppath+"/time_correlation.fits[AUXL-TCOR-HIS]" 
         ])
