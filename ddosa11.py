@@ -47,7 +47,7 @@ class ibis_isgr_energy(DataAnalysis):
     input_mcecmod=FindICIndexEntry_MCEC_MOD
     input_l2remod=FindICIndexEntry_L2RE_MOD
 
-    version="v6_extras"
+    version="v6.1_extras"
 
     def main(self):
         if len(glob.glob(self.input_scw.scwpath+"/isgri_events.fits*"))==0:
