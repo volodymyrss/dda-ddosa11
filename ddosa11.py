@@ -21,7 +21,7 @@ class T(DataAnalysis):
 
 class FindICIndexEntry_RISE_MOD(FindICIndexEntry):
     ds="ISGR-RISE-MOD"
-    icversion=2
+    icversion=4
 
 class FindICIndexEntry_EFFC_MOD(FindICIndexEntry):
     ds="ISGR-EFFC-MOD"
