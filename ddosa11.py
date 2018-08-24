@@ -253,6 +253,11 @@ class BinEventsSpectra(BinEventsVirtual):
     target_level="BIN_S"
     input_bins=SpectraBins
 
+class BinEventsLC(BinEventsVirtual):
+    target_level="BIN_S"
+    input_timebin=LCTimeBin
+    input_bins=LCEnergyBins
+
 class SpectraBins(DataAnalysis):
     input_binsname="spectral_bins_256"
     
