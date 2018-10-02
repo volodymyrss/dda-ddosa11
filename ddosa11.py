@@ -50,6 +50,7 @@ class ibis_isgr_energy(DataAnalysis):
     version="v6.1_extras"
 
     def main(self):
+        self.input_scw.test_isgri_events()
         if len(glob.glob(self.input_scw.scwpath+"/isgri_events.fits*"))==0:
             raise NoISGRIEvents()
 
