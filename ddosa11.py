@@ -218,7 +218,7 @@ class BinEventsVirtual(DataAnalysis):
 
         ht['isgri_min_rise'] = self.minrisetime
         ht['isgri_max_rise'] = self.maxrisetime
-        ht['isgri_t_len'] = 10000000
+        ht['isgri_t_len'] = 10000000 if not hasattr(self,'input_timebin') else self.input_timebin.time_bin_seconds
         ht['idxLowThre']=self.input_scw.revdirpath+"/idx/isgri_context_index.fits[1]"
         ht['idxNoisy']=self.input_scw.revdirpath+"/idx/isgri_prp_noise_index.fits[1]"
         ht['outRawShadow']=det_fn+det_tpl
