@@ -286,5 +286,4 @@ try:
 
 except Exception as e:
     print("no jemx")
-    raise
 
