@@ -277,3 +277,22 @@ class SpectraBins(DataAnalysis):
         return self.binrmfext
 
 
+try:
+    import ddjemx
+
+    class OSAEnv(DataAnalysis):
+        version="11.0"
+    
+    class jemx_image(ddjemx.jemx_image):
+        input_osaenv = OSAEnv
+    
+    class jemx_spe(ddjemx.jemx_image):
+        input_osaenv = OSAEnv
+    
+    class jemx_lcr(ddjemx.jemx_image):
+        input_osaenv = OSAEnv
+
+except Exception as e:
+    print("no jemx")
+    raise
+
