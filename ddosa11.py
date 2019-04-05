@@ -286,10 +286,10 @@ try:
     class jemx_image(ddjemx.jemx_image):
         input_osaenv = OSAEnv
     
-    class jemx_spe(ddjemx.jemx_image):
+    class jemx_spe(ddjemx.jemx_spe):
         input_osaenv = OSAEnv
     
-    class jemx_lcr(ddjemx.jemx_image):
+    class jemx_lcr(ddjemx.jemx_lcr):
         input_osaenv = OSAEnv
 
 except Exception as e:
