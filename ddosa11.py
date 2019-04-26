@@ -145,7 +145,7 @@ class BinEventsVirtual(DataAnalysis):
     maxrisetime=116
     minrisetime=16
 
-    version="v3"
+    version="v3.11"
     
     cached=True
 
@@ -153,7 +153,7 @@ class BinEventsVirtual(DataAnalysis):
 
     ii_shadow_build_binary="ii_shadow_build"
 
-    input_osatools = get_OSA_tools(['ii_shadow_build'])
+    #input_osatools = get_OSA_tools(['ii_shadow_build'])
 
     def get_version(self):
         v=self.get_signature()+"."+self.version
