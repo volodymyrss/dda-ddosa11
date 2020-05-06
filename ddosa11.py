@@ -153,6 +153,8 @@ class BinEventsVirtual(DataAnalysis):
 
     ii_shadow_build_binary="ii_shadow_build"
 
+    NoisyDetFlag=0
+
     #input_osatools = get_OSA_tools(['ii_shadow_build'])
 
     def get_version(self):
@@ -161,6 +163,10 @@ class BinEventsVirtual(DataAnalysis):
             v+=".lrt%i"%self.maxrisetime
         if self.minrisetime!=16:
             v+=".hrt%i"%self.minrisetime
+
+        if self.NoisyDetFlag!=1:
+            v+=".nonoisydet"
+
         return v
 
     def main(self):
@@ -225,6 +231,11 @@ class BinEventsVirtual(DataAnalysis):
         ht['outEffShadow']=eff_fn+eff_tpl
         ht['inEFFC']=self.input_effcmod.get_member_location(self.input_scw)
         #ht['inEFFC']=self.input_ibisic.ibisicroot+"/mod/isgr_effc_mod_0001.fits"
+
+        if hasattr(self, 'NoisyDetFlag'):
+            ht['NoisyDetFlag'] = self.NoisyDetFlag
+
+
 
         self.extra_pars(ht)
 
