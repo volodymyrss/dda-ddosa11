@@ -196,10 +196,10 @@ class BinEventsVirtual(DataAnalysis):
         ht['gti_name'] = 'MERGED_ISGRI'
         ht['outputLevel'] = self.target_level
 
-        print "target_level",self.target_level
+        print("target_level",self.target_level)
 
-        print "has rmfbins "+str(self.input_bins.rmfbins) if hasattr(self.input_bins,'rmfbins') else "no rmfbins"
-        print "has binrmfext" if hasattr(self.input_bins,'binrmfext') else "no binrmfext"
+        print("has rmfbins "+str(self.input_bins.rmfbins) if hasattr(self.input_bins,'rmfbins') else "no rmfbins")
+        print("has binrmfext" if hasattr(self.input_bins,'binrmfext') else "no binrmfext")
 
         if ( self.target_level=="BIN_I" or not hasattr(self.input_bins,'rmfbins') or not self.input_bins.rmfbins or not hasattr(self.input_bins,'binrmfext') ) and not ( hasattr(self.input_bins,'rmfbins') and self.input_bins.rmfbins ): # fix!!
             ht['isgri_e_num'] = len(self.input_bins.bins)
@@ -270,7 +270,7 @@ class SpectraBins(DataAnalysis):
     def main(self):
         self.binrmf=os.environ['CURRENT_IC']+"/ic/ibis/rsp/isgr_ebds_mod_0001.fits"
         e=fits.open(self.binrmf)[1].data
-        self.bins=zip(e['E_MIN'],e['E_MAX'])
+        self.bins=list(zip(e['E_MIN'],e['E_MAX']))
         self.binrmfext=self.binrmf+'[1]'
 
     def get_binrmfext(self):
