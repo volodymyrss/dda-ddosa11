@@ -19,6 +19,9 @@ class T(DataAnalysis):
 
     #input_ecorrdata=FindGetEcorrCalDB(use_ds_list=[("ISGR-RISE-MOD",2),("ISGR-EFFC-MOD",1)])
 
+class OSA110analysisDisabled(da.AnalysisException):
+    pass
+
 class FindICIndexEntry_RISE_MOD(FindICIndexEntry):
     ds="ISGR-RISE-MOD"
     icversion=4
@@ -34,6 +37,10 @@ class FindICIndexEntry_MCEC_MOD(FindICIndexEntry):
 class FindICIndexEntry_L2RE_MOD(FindICIndexEntry):
     ds="ISGR-L2RE-MOD"
     icversion=1
+
+class ScWData(ddosa.ScWData):
+    def main(self):
+        raise OSA110analysisDisabled()
 
 class ibis_isgr_energy(DataAnalysis):
     cached=False
