@@ -5,6 +5,7 @@ import numpy as np
 
 import dataanalysis.core as da
 
+import ddosa
 from ddosa import *
 
 from findic import FindICIndexEntry
