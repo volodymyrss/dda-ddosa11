@@ -206,8 +206,11 @@ class BinEventsVirtual(DataAnalysis):
 
         if ( self.target_level=="BIN_I" or not hasattr(self.input_bins,'rmfbins') or not self.input_bins.rmfbins or not hasattr(self.input_bins,'binrmfext') ) and not ( hasattr(self.input_bins,'rmfbins') and self.input_bins.rmfbins ): # fix!!
 
-            if any([a[0]>900 for a in self.input_bins.bins]) or any([a[0]<15 for a in self.input_bins.bins]):
+            if any([a[1]>900 for a in self.input_bins.bins]) or any([a[0]<15 for a in self.input_bins.bins]):
                 raise BinLimitsOutOfRange("can only use energy range from 15 to 900 keV!")
+            
+            if any([a[0]>=a[1] for a in self.input_bins.bins]):
+                raise BinLimitsOutOfRange("energy bins should have positive width")
 
             ht['isgri_e_num'] = len(self.input_bins.bins)
             ht['isgri_e_min'] = " ".join([str(a[0]) for a in self.input_bins.bins])
