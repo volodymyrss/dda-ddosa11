@@ -229,7 +229,14 @@ class BinEventsVirtual(DataAnalysis):
 
         self.extra_pars(ht)
 
-        ht.run()
+        try:
+            ht.run()
+        except pilton.HEAToolException as e:
+            if 'ERR_ISGR_OSM_DATA_INCONSISTENCY' in ht.output:
+                print("detected ERR_ISGR_OSM_DATA_INCONSISTENCY")
+                raise ERR_ISGR_OSM_DATA_INCONSISTENCY()
+            raise
+
 
         self.shadow_detector=DataFile(det_fn)
         self.shadow_efficiency=DataFile(eff_fn)
