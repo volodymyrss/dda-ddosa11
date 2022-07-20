@@ -5,9 +5,13 @@ import numpy as np
 
 import dataanalysis.core as da
 
+import ddosa
 from ddosa import *
 
 from findic import FindICIndexEntry
+
+class BinLimitsOutOfRange(da.AnalysisException):
+    pass
 
 class EcorCalMode(DataAnalysis):
     mode="fullauto"
@@ -47,9 +51,10 @@ class ibis_isgr_energy(DataAnalysis):
     input_mcecmod=FindICIndexEntry_MCEC_MOD
     input_l2remod=FindICIndexEntry_L2RE_MOD
 
-    version="v6_extras"
+    version="v6.1_extras"
 
     def main(self):
+        self.input_scw.test_isgri_events()
         if len(glob.glob(self.input_scw.scwpath+"/isgri_events.fits*"))==0:
             raise NoISGRIEvents()
 
@@ -71,10 +76,10 @@ class ibis_isgr_energy(DataAnalysis):
         ht['useGTI']="y"
         #ht['eraseALL']="y"
         ht['randSeed']=500
-        ht['riseDOL']=self.input_risemod.member_location
+        ht['riseDOL']=self.input_risemod.get_member_location(self.input_scw)
         ht['GODOL']=self.input_ibisic.ibisicroot+"/cal/ibis_isgr_gain_offset_0010.fits"
-        ht['mcecDOL']=self.input_mcecmod.member_location
-        ht['l2reDOL']=self.input_l2remod.member_location
+        ht['mcecDOL']=self.input_mcecmod.get_member_location(self.input_scw)
+        ht['l2reDOL']=self.input_l2remod.get_member_location(self.input_scw)
         ht['chatter']="10"
         ht.run()
 
@@ -144,7 +149,7 @@ class BinEventsVirtual(DataAnalysis):
     maxrisetime=116
     minrisetime=16
 
-    version="v3"
+    version="v3.11"
     
     cached=True
 
@@ -152,7 +157,7 @@ class BinEventsVirtual(DataAnalysis):
 
     ii_shadow_build_binary="ii_shadow_build"
 
-    input_osatools = get_OSA_tools(['ii_shadow_build'])
+    #input_osatools = get_OSA_tools(['ii_shadow_build'])
 
     def get_version(self):
         v=self.get_signature()+"."+self.version
@@ -195,15 +200,24 @@ class BinEventsVirtual(DataAnalysis):
         ht['gti_name'] = 'MERGED_ISGRI'
         ht['outputLevel'] = self.target_level
 
-        print "target_level",self.target_level
+        print("target_level",self.target_level)
 
-        print "has rmfbins "+str(self.input_bins.rmfbins) if hasattr(self.input_bins,'rmfbins') else "no rmfbins"
-        print "has binrmfext" if hasattr(self.input_bins,'binrmfext') else "no binrmfext"
+        print("has rmfbins "+str(self.input_bins.rmfbins) if hasattr(self.input_bins,'rmfbins') else "no rmfbins")
+        print("has binrmfext" if hasattr(self.input_bins,'binrmfext') else "no binrmfext")
 
         if ( self.target_level=="BIN_I" or not hasattr(self.input_bins,'rmfbins') or not self.input_bins.rmfbins or not hasattr(self.input_bins,'binrmfext') ) and not ( hasattr(self.input_bins,'rmfbins') and self.input_bins.rmfbins ): # fix!!
-            ht['isgri_e_num'] = len(self.input_bins.bins)
-            ht['isgri_e_min'] = " ".join([str(a[0]) for a in self.input_bins.bins])
-            ht['isgri_e_max'] = " ".join([str(a[1]) for a in self.input_bins.bins])
+            
+            if any([a[0]>=a[1] for a in self.input_bins.bins]):
+                raise BinLimitsOutOfRange("energy bins should have positive width")
+
+            bins = []
+
+            for a in self.input_bins.bins:
+                bins.append([ max(15, a[0]), min(900, a[1]) ])
+
+            ht['isgri_e_num'] = len(bins)
+            ht['isgri_e_min'] = " ".join([str(a[0]) for a in bins])
+            ht['isgri_e_max'] = " ".join([str(a[1]) for a in bins])
         elif self.target_level=="BIN_S" or ( hasattr(self.input_bins,'rmfbins') and self.input_bins.rmfbins ) or hasattr(self.input_bins,'binrmfext'):
             ht['isgri_e_num'] = -1
 
@@ -217,17 +231,24 @@ class BinEventsVirtual(DataAnalysis):
 
         ht['isgri_min_rise'] = self.minrisetime
         ht['isgri_max_rise'] = self.maxrisetime
-        ht['isgri_t_len'] = 10000000
+        ht['isgri_t_len'] = 10000000 if not hasattr(self,'input_timebin') else self.input_timebin.time_bin_seconds
         ht['idxLowThre']=self.input_scw.revdirpath+"/idx/isgri_context_index.fits[1]"
         ht['idxNoisy']=self.input_scw.revdirpath+"/idx/isgri_prp_noise_index.fits[1]"
         ht['outRawShadow']=det_fn+det_tpl
         ht['outEffShadow']=eff_fn+eff_tpl
-        ht['inEFFC']=self.input_effcmod.member_location
+        ht['inEFFC']=self.input_effcmod.get_member_location(self.input_scw)
         #ht['inEFFC']=self.input_ibisic.ibisicroot+"/mod/isgr_effc_mod_0001.fits"
 
         self.extra_pars(ht)
 
-        ht.run()
+        try:
+            ht.run()
+        except pilton.HEAToolException as e:
+            if 'ERR_ISGR_OSM_DATA_INCONSISTENCY' in ht.output:
+                print("detected ERR_ISGR_OSM_DATA_INCONSISTENCY")
+                raise ERR_ISGR_OSM_DATA_INCONSISTENCY()
+            raise
+
 
         self.shadow_detector=DataFile(det_fn)
         self.shadow_efficiency=DataFile(eff_fn)
@@ -253,6 +274,13 @@ class BinEventsSpectra(BinEventsVirtual):
     target_level="BIN_S"
     input_bins=SpectraBins
 
+class BinEventsLC(BinEventsVirtual):
+    version="v1.1_o11"
+
+    target_level="BIN_T"
+    input_timebin=LCTimeBin
+    input_bins=LCEnergyBins
+
 class SpectraBins(DataAnalysis):
     input_binsname="spectral_bins_256"
     
@@ -261,8 +289,8 @@ class SpectraBins(DataAnalysis):
     version="v1"
     def main(self):
         self.binrmf=os.environ['CURRENT_IC']+"/ic/ibis/rsp/isgr_ebds_mod_0001.fits"
-        e=pyfits.open(self.binrmf)[1].data
-        self.bins=zip(e['E_MIN'],e['E_MAX'])
+        e=fits.open(self.binrmf)[1].data
+        self.bins=list(zip(e['E_MIN'],e['E_MAX']))
         self.binrmfext=self.binrmf+'[1]'
 
     def get_binrmfext(self):
@@ -286,4 +314,6 @@ try:
 
 except Exception as e:
     print("no jemx")
+class OSAEnv(DataAnalysis):
+    version="11.0"
 
