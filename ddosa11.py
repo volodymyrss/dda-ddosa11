@@ -10,6 +10,12 @@ from ddosa import *
 
 from findic import FindICIndexEntry
 
+class BinLimitsOutOfRange(da.AnalysisException):
+    pass
+
+class ErrorCorrectingLUT1(da.AnalysisException):
+    pass
+
 class EcorCalMode(DataAnalysis):
     mode="fullauto"
     #mode="commonlt"
@@ -78,8 +84,16 @@ class ibis_isgr_energy(DataAnalysis):
         ht['mcecDOL']=self.input_mcecmod.get_member_location(self.input_scw)
         ht['l2reDOL']=self.input_l2remod.get_member_location(self.input_scw)
         ht['chatter']="10"
-        ht.run()
 
+        try:
+            ht.run()
+        except pilton.HEAToolException as e:
+            if 'ERROR correcting for LUT1 temperature bias' in ht.output:
+                print("detected ERROR correcting for LUT1 temperature bias")
+                raise ErrorCorrectingLUT1()
+            raise
+
+        
 
         self.output_events=DataFile("isgri_events_corrected.fits")
 
