@@ -91,6 +91,9 @@ class ibis_isgr_energy(DataAnalysis):
             if 'ERROR correcting for LUT1 temperature bias' in ht.output:
                 print("detected ERROR correcting for LUT1 temperature bias")
                 raise ErrorCorrectingLUT1()
+
+            print("undefined error in ibis_isgr_energy: %s", repr(e)[:500])
+            
             raise
 
         
