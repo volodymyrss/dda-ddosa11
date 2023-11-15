@@ -5,9 +5,16 @@ import numpy as np
 
 import dataanalysis.core as da
 
+import ddosa
 from ddosa import *
 
 from findic import FindICIndexEntry
+
+class BinLimitsOutOfRange(da.AnalysisException):
+    pass
+
+class ErrorCorrectingLUT1(da.AnalysisException):
+    pass
 
 class EcorCalMode(DataAnalysis):
     mode="fullauto"
@@ -77,8 +84,19 @@ class ibis_isgr_energy(DataAnalysis):
         ht['mcecDOL']=self.input_mcecmod.get_member_location(self.input_scw)
         ht['l2reDOL']=self.input_l2remod.get_member_location(self.input_scw)
         ht['chatter']="10"
-        ht.run()
 
+        try:
+            ht.run()
+        except pilton.HEAToolException as e:
+            if 'ERROR correcting for LUT1 temperature bias' in ht.output:
+                print("detected ERROR correcting for LUT1 temperature bias")
+                raise ErrorCorrectingLUT1()
+
+            print("undefined error in ibis_isgr_energy: %s", repr(e)[:500])
+            
+            raise
+
+        
 
         self.output_events=DataFile("isgri_events_corrected.fits")
 
@@ -202,15 +220,24 @@ class BinEventsVirtual(DataAnalysis):
         ht['gti_name'] = 'MERGED_ISGRI'
         ht['outputLevel'] = self.target_level
 
-        print "target_level",self.target_level
+        print("target_level",self.target_level)
 
-        print "has rmfbins "+str(self.input_bins.rmfbins) if hasattr(self.input_bins,'rmfbins') else "no rmfbins"
-        print "has binrmfext" if hasattr(self.input_bins,'binrmfext') else "no binrmfext"
+        print("has rmfbins "+str(self.input_bins.rmfbins) if hasattr(self.input_bins,'rmfbins') else "no rmfbins")
+        print("has binrmfext" if hasattr(self.input_bins,'binrmfext') else "no binrmfext")
 
         if ( self.target_level=="BIN_I" or not hasattr(self.input_bins,'rmfbins') or not self.input_bins.rmfbins or not hasattr(self.input_bins,'binrmfext') ) and not ( hasattr(self.input_bins,'rmfbins') and self.input_bins.rmfbins ): # fix!!
-            ht['isgri_e_num'] = len(self.input_bins.bins)
-            ht['isgri_e_min'] = " ".join([str(a[0]) for a in self.input_bins.bins])
-            ht['isgri_e_max'] = " ".join([str(a[1]) for a in self.input_bins.bins])
+            
+            if any([a[0]>=a[1] for a in self.input_bins.bins]):
+                raise BinLimitsOutOfRange("energy bins should have positive width")
+
+            bins = []
+
+            for a in self.input_bins.bins:
+                bins.append([ max(15, a[0]), min(900, a[1]) ])
+
+            ht['isgri_e_num'] = len(bins)
+            ht['isgri_e_min'] = " ".join([str(a[0]) for a in bins])
+            ht['isgri_e_max'] = " ".join([str(a[1]) for a in bins])
         elif self.target_level=="BIN_S" or ( hasattr(self.input_bins,'rmfbins') and self.input_bins.rmfbins ) or hasattr(self.input_bins,'binrmfext'):
             ht['isgri_e_num'] = -1
 
@@ -235,11 +262,16 @@ class BinEventsVirtual(DataAnalysis):
         if hasattr(self, 'NoisyDetFlag'):
             ht['NoisyDetFlag'] = self.NoisyDetFlag
 
+	self.extra_pars(ht)
 
+        try:
+            ht.run()
+        except pilton.HEAToolException as e:
+            if 'ERR_ISGR_OSM_DATA_INCONSISTENCY' in ht.output:
+                print("detected ERR_ISGR_OSM_DATA_INCONSISTENCY")
+                raise ERR_ISGR_OSM_DATA_INCONSISTENCY()
+            raise
 
-        self.extra_pars(ht)
-
-        ht.run()
 
         self.shadow_detector=DataFile(det_fn)
         self.shadow_efficiency=DataFile(eff_fn)
@@ -281,7 +313,7 @@ class SpectraBins(DataAnalysis):
     def main(self):
         self.binrmf=os.environ['CURRENT_IC']+"/ic/ibis/rsp/isgr_ebds_mod_0001.fits"
         e=fits.open(self.binrmf)[1].data
-        self.bins=zip(e['E_MIN'],e['E_MAX'])
+        self.bins=list(zip(e['E_MIN'],e['E_MAX']))
         self.binrmfext=self.binrmf+'[1]'
 
     def get_binrmfext(self):
