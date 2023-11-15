@@ -262,7 +262,7 @@ class BinEventsVirtual(DataAnalysis):
         if hasattr(self, 'NoisyDetFlag'):
             ht['NoisyDetFlag'] = self.NoisyDetFlag
 
-	self.extra_pars(ht)
+        self.extra_pars(ht)
 
         try:
             ht.run()
@@ -278,7 +278,7 @@ class BinEventsVirtual(DataAnalysis):
         
         self.post_process()
 
-    def extra_pars(selt,ht):
+    def extra_pars(selt, ht):
         pass
 
     def post_process(self):
